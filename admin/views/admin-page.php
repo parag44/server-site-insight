@@ -406,11 +406,11 @@ function ssi_row( $label, $value, $tooltip = '' ) {
 			<span class="ssi-tab-badge ssi-tab-badge--dev"><?php esc_html_e( 'DEV', 'server-site-insight' ); ?></span>
 		</button>
 		<?php endif; ?>
-		<!-- History Tab (Activity Audit Log) -->
-		<button class="ssi-tab-btn" role="tab" id="ssi-tab-history"
-			aria-controls="ssi-panel-history" aria-selected="false" type="button">
-			<span class="dashicons dashicons-chart-line" aria-hidden="true"></span>
-			<?php esc_html_e( 'History', 'server-site-insight' ); ?>
+		<!-- Logs Tab -->
+		<button class="ssi-tab-btn" role="tab" id="ssi-tab-logs"
+			aria-controls="ssi-panel-logs" aria-selected="false" type="button">
+			<span class="dashicons dashicons-media-text" aria-hidden="true"></span>
+			<?php esc_html_e( 'Logs', 'server-site-insight' ); ?>
 		</button>
 
 		<!-- Tools tab — always visible to manage_options users -->
@@ -656,8 +656,10 @@ function ssi_row( $label, $value, $tooltip = '' ) {
 	</div><!-- /#ssi-panel-developer -->
 	<?php endif; ?>
 
-	<!-- ═══ TAB PANEL 4: HISTORY ═════════════════════════════════════════ -->
-	<?php require_once SSI_PLUGIN_DIR . 'admin/views/history-page.php'; ?>
+	<!-- ═══ TAB PANEL 4: LOGS ════════════════════════════════════════════ -->
+	<div id="ssi-panel-logs" role="tabpanel" aria-labelledby="ssi-tab-logs" class="ssi-tab-panel" hidden>
+		<?php require_once SSI_PLUGIN_DIR . 'admin/views/logs-page.php'; ?>
+	</div>
 
 	<?php
 	// ═══ TAB PANEL 5: TOOLS ══════════════════════════════════════════════

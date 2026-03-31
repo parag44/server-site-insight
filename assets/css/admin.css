@@ -1037,13 +1037,67 @@
 .ssi-log-meta__item--warn { color: var(--ssi-warn-text); font-weight: 600; }
 .ssi-log-meta__item .dashicons { font-size: 14px !important; height: 14px !important; width: 14px !important; }
 
+/* Integrated Logs Layout */
+.ssi-logs-container {
+	display: flex;
+	flex-direction: column;
+	gap: var(--ssi-md);
+}
+
+.ssi-logs-nav {
+	display: flex;
+	gap: 12px;
+	border-bottom: 1px solid var(--ssi-border);
+	margin-bottom: var(--ssi-md);
+	padding-bottom: 8px;
+}
+
+.ssi-logs-nav__btn {
+	background: none;
+	border: none;
+	border-bottom: 2px solid transparent;
+	color: var(--ssi-text-muted);
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-family: var(--ssi-font);
+	font-size: 13px;
+	font-weight: 600;
+	padding: 8px 4px;
+	transition: all 0.2s;
+}
+
+.ssi-logs-nav__btn:hover {
+	color: var(--ssi-accent);
+}
+
+.ssi-logs-nav__btn--active {
+	border-bottom-color: var(--ssi-accent);
+	color: var(--ssi-accent);
+}
+
+.ssi-logs-nav__btn .dashicons {
+	font-size: 16px;
+	height: 16px;
+	width: 16px;
+}
+
 /* Action buttons row */
+.ssi-logpage-toolbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: var(--ssi-md);
+	gap: var(--ssi-md);
+	flex-wrap: wrap;
+}
+
 .ssi-log-actions {
 	align-items: center;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
-	margin-bottom: var(--ssi-md);
 }
 
 /* Filter pills row */
@@ -1102,27 +1156,23 @@
 .ssi-log-entry-count { color: var(--ssi-text); font-size: 12px; font-weight: 700; }
 .ssi-log-tail-note   { color: var(--ssi-text-muted); font-size: 11px; font-style: italic; }
 
-/* Pre / code block */
+/* Log Pre/Code Output */
 .ssi-log-pre {
-	background: #0f172a;
-	border: 1px solid var(--ssi-border);
-	border-radius: var(--ssi-radius-sm);
-	color: #e2e8f0;
+	background: #1e293b;
+	border-radius: var(--ssi-radius-md);
+	box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+	color: #f1f5f9;
 	font-family: var(--ssi-font-mono);
-	font-size: 12px;
-	line-height: 1.65;
+	font-size: 13px;
+	line-height: 1.6;
 	margin: 0;
-	max-height: 520px;
-	overflow: auto;
+	overflow-x: auto;
 	padding: var(--ssi-md);
-	white-space: pre-wrap;
-	word-break: break-all;
+	position: relative;
 }
 
-/* Coloured log lines */
-.ssi-log-line         { display: block; }
-.ssi-log-line--warning    { color: #fde68a; }
-.ssi-log-line--fatal      { color: #fca5a5; font-weight: 700; }
+.ssi-log-line--warning    { color: #fde047; }
+.ssi-log-line--fatal      { color: #f87171; font-weight: 600; }
 .ssi-log-line--notice     { color: #93c5fd; }
 .ssi-log-line--deprecated { color: #fdba74; }
 .ssi-log-line--parse      { color: #f87171; font-weight: 700; }

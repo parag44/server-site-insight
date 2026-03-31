@@ -350,6 +350,29 @@
 		} );
 	}
 
+	function initLogsTabs() {
+		var nav = document.querySelector( '.ssi-logs-nav' );
+		if ( ! nav ) return;
+
+		var btns  = nav.querySelectorAll( '.ssi-logs-nav__btn' );
+		var panes = document.querySelectorAll( '.ssi-log-view-pane' );
+
+		btns.forEach( function( btn ) {
+			btn.addEventListener( 'click', function() {
+				var targetId = 'ssi-log-view-' + this.getAttribute( 'data-show' );
+
+				// Reset nav
+				btns.forEach( function( b ) { b.classList.remove( 'ssi-logs-nav__btn--active' ); } );
+				this.classList.add( 'ssi-logs-nav__btn--active' );
+
+				// Reset panes
+				panes.forEach( function( p ) { p.style.display = 'none'; } );
+				var target = document.getElementById( targetId );
+				if ( target ) { target.style.display = 'block'; }
+			});
+		});
+	}
+
 	function initDebugLog() {
 		var nonce      = ( ssiData && ssiData.toolsNonce ) || '';
 		var allLines   = [];
@@ -1125,6 +1148,7 @@
 		initPrintBtn();
 		initTabs();
 		initTools();
+		initLogsTabs();
 		initDebugLog();
 		initSmartPills();
 		initFilters();

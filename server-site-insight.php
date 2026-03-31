@@ -114,25 +114,9 @@ function ssi_register_admin_menu() {
 }
 add_action( 'admin_menu', 'ssi_register_admin_menu' );
 
-/**
- * Add Debug Log submenu before Settings, conditionally on WP_DEBUG_LOG.
- * Registered on a slightly lower priority (15) so it appears after the
- * auto-created top-level duplicate but before Settings (registered at 10).
- */
-function ssi_register_debug_log_menu() {
-	if ( ! defined( 'WP_DEBUG_LOG' ) || ! WP_DEBUG_LOG ) {
-		return;
-	}
-	add_submenu_page(
-		'server-site-insight',
-		__( 'Debug Log', 'server-site-insight' ),
-		__( 'Debug Log', 'server-site-insight' ),
-		SSI_CAPABILITY,
-		'server-site-insight-debug-log',
-		'ssi_render_debug_log_page'
-	);
-}
-add_action( 'admin_menu', 'ssi_register_debug_log_menu', 15 );
+// Submenu registration is now handled solely via ssi_register_admin_menu.
+// The Debug Log has been moved to the unified 'Logs' tab.
+
 
 // ---------------------------------------------------------------------------
 // Page renderers
