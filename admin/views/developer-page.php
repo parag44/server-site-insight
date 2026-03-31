@@ -35,6 +35,20 @@ $query_count    = isset( $ssi_dev_inf['query_count'] ) ? $ssi_dev_inf['query_cou
 	<!-- Left Column -->
 	<div class="ssi-grid-col" style="display:flex;flex-direction:column;gap:var(--ssi-lg);">
 		
+		<!-- Plugin Impact Analyzer (Lazy) -->
+		<details class="ssi-card ssi-card--dev ssi-lazy-panel ssi-card--highlight-persist" id="ssi-dev-impact" data-action="ssi_lazy_plugin_impact" style="border-color:var(--ssi-primary);box-shadow:0 0 15px rgba(79,70,229,0.15);">
+			<summary class="ssi-card__header ssi-flex-between" style="cursor:pointer;list-style:none;background:var(--ssi-surface-2);">
+				<div style="display:flex;align-items:center;gap:8px;">
+					<span class="ssi-card__icon dashicons dashicons-dashboard" aria-hidden="true" style="color:var(--ssi-primary);"></span>
+					<h2 class="ssi-card__title ssi-inline-block" style="color:var(--ssi-primary);"><?php esc_html_e( 'Plugin Impact Analyzer', 'server-site-insight' ); ?></h2>
+				</div>
+				<span class="dashicons dashicons-arrow-down-alt2 ssi-toggle-icon"></span>
+			</summary>
+			<div class="ssi-card__body ssi-lazy-content">
+				<div class="ssi-loader" style="padding:20px;text-align:left;color:var(--ssi-text-muted);"><span class="dashicons dashicons-update dashicons-update-spin"></span> Crunching plugin performance data...</div>
+			</div>
+		</details>
+		
 		<!-- DB & Autoload Insights -->
 		<details class="ssi-card ssi-card--dev" id="ssi-dev-db">
 			<summary class="ssi-card__header ssi-flex-between" style="cursor:pointer;list-style:none;">
@@ -202,38 +216,10 @@ $query_count    = isset( $ssi_dev_inf['query_count'] ) ? $ssi_dev_inf['query_cou
 			</div>
 		</details>
 
-		<!-- Activity Log (Lazy) -->
-		<details class="ssi-card ssi-card--dev ssi-lazy-panel" id="ssi-dev-activity" data-action="ssi_lazy_activity_log">
-			<summary class="ssi-card__header ssi-flex-between" style="cursor:pointer;list-style:none;">
-				<div style="display:flex;align-items:center;gap:8px;">
-					<span class="ssi-card__icon dashicons dashicons-list-view" aria-hidden="true"></span>
-					<h2 class="ssi-card__title ssi-inline-block"><?php esc_html_e( 'Activity Log', 'server-site-insight' ); ?></h2>
-				</div>
-				<span class="dashicons dashicons-arrow-down-alt2 ssi-toggle-icon"></span>
-			</summary>
-			<div class="ssi-card__body ssi-lazy-content">
-				<div class="ssi-loader" style="padding:20px;text-align:left;color:var(--ssi-text-muted);"><span class="dashicons dashicons-update dashicons-update-spin"></span> Fetching recent actions...</div>
-			</div>
-		</details>
-
 	</div><!-- /.ssi-grid-col -->
 
 	<!-- Right Column -->
 	<div class="ssi-grid-col" style="display:flex;flex-direction:column;gap:var(--ssi-lg);">
-
-		<!-- Plugin Impact Analyzer (Lazy) -->
-		<details class="ssi-card ssi-card--dev ssi-lazy-panel ssi-card--highlight-persist" id="ssi-dev-impact" data-action="ssi_lazy_plugin_impact" style="border-color:var(--ssi-primary);box-shadow:0 0 15px rgba(79,70,229,0.15);">
-			<summary class="ssi-card__header ssi-flex-between" style="cursor:pointer;list-style:none;background:var(--ssi-surface-2);">
-				<div style="display:flex;align-items:center;gap:8px;">
-					<span class="ssi-card__icon dashicons dashicons-dashboard" aria-hidden="true" style="color:var(--ssi-primary);"></span>
-					<h2 class="ssi-card__title ssi-inline-block" style="color:var(--ssi-primary);"><?php esc_html_e( 'Plugin Impact Analyzer', 'server-site-insight' ); ?></h2>
-				</div>
-				<span class="dashicons dashicons-arrow-down-alt2 ssi-toggle-icon"></span>
-			</summary>
-			<div class="ssi-card__body ssi-lazy-content">
-				<div class="ssi-loader" style="padding:20px;text-align:left;color:var(--ssi-text-muted);"><span class="dashicons dashicons-update dashicons-update-spin"></span> Crunching plugin performance data...</div>
-			</div>
-		</details>
 
 		<!-- Query Performance (Lazy) -->
 		<details class="ssi-card ssi-card--dev ssi-lazy-panel" id="ssi-dev-queries" data-action="ssi_lazy_queries">

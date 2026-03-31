@@ -166,34 +166,6 @@
 		} );
 	}
 
-	// ── Dark mode ────────────────────────────────────────────────────────
-	function applyDark( dark ) {
-		if ( ! wrap ) { return; }
-		dark ? wrap.classList.add( 'ssi-dark' ) : wrap.classList.remove( 'ssi-dark' );
-		var icon = document.querySelector( '#ssi-dark-toggle .dashicons' );
-		if ( icon ) { icon.className = 'dashicons dashicons-' + ( dark ? 'sun' : 'visibility' ); }
-	}
-
-	function initDarkToggle() {
-		var btn = document.getElementById( 'ssi-dark-toggle' );
-		if ( ! btn ) { return; }
-		var stored = localStorage.getItem( 'ssi_dark_mode' );
-		if ( stored !== null ) { isDark = stored === '1'; applyDark( isDark ); }
-
-		btn.addEventListener( 'click', function () {
-			isDark = ! isDark;
-			applyDark( isDark );
-			localStorage.setItem( 'ssi_dark_mode', isDark ? '1' : '0' );
-			if ( ssiData && ssiData.nonce && ssiData.ajaxUrl ) {
-				var fd = new FormData();
-				fd.append( 'action', 'ssi_save_settings' );
-				fd.append( 'nonce', ssiData.nonce );
-				fd.append( 'settings[dark_mode]', isDark ? '1' : '' );
-				fetch( ssiData.ajaxUrl, { method: 'POST', body: fd, credentials: 'same-origin' } );
-			}
-		} );
-	}
-
 	// ── Filter (All / Warning / Critical) ────────────────────────────────
 	function initFilters() {
 		var btns  = document.querySelectorAll( '.ssi-filter-btn' );
@@ -1068,10 +1040,77 @@
 		});
 	}
 
-	// ── Accessibility (kept for backward compat) ───────────────────────────
+	// ── Target blank fixes and basic interactions ─────────────────────────
 	function initA11y() {
-		// Pill keyboard nav is now handled by initSmartPills().
 		// Retain hook in case external code calls it directly.
+	}
+
+	// ── Activity Audit Log Filters ─────────────────────────────────────────
+	function initTimeline() {
+		var filters = document.getElementById( 'ssi-timeline-filters' );
+		var refresh = document.getElementById( 'ssi-refresh-history' );
+		var clear   = document.getElementById( 'ssi-clear-history' );
+		if ( ! filters ) return;
+		
+		var btns  = filters.querySelectorAll( 'button' );
+		var rows  = document.querySelectorAll( '.ssi-audit-row' );
+		
+		btns.forEach( function( btn ) {
+			btn.addEventListener( 'click', function() {
+				var filter = this.getAttribute( 'data-filter' );
+				
+				// Update active state
+				btns.forEach( function( b ) { b.classList.remove( 'ssi-log-filter--active' ); } );
+				this.classList.add( 'ssi-log-filter--active' );
+				
+				// Filter rows
+				rows.forEach( function( row ) {
+					if ( filter === 'all' || row.getAttribute( 'data-type' ) === filter ) {
+						row.style.display = ''; // Browser default for table-row
+					} else {
+						row.style.display = 'none';
+					}
+				});
+			});
+		});
+
+		if ( refresh ) {
+			refresh.addEventListener( 'click', function() {
+				var url = new URL( window.location.href );
+				url.searchParams.set( 'ssi_refresh', '1' );
+				window.location.href = url.toString();
+			});
+		}
+
+		if ( clear ) {
+			clear.addEventListener( 'click', function() {
+				if ( ! confirm( 'Are you EXACTLY sure you want to delete ALL audit history? This action is irreversible.' ) ) {
+					return;
+				}
+				
+				clear.disabled = true;
+				var icon = clear.querySelector( '.dashicons' );
+				if ( icon ) { icon.classList.add( 'dashicons-update-spin' ); }
+
+				jQuery.ajax( {
+					url: ssiData.ajaxUrl,
+					type: 'POST',
+					data: {
+						action: 'ssi_clear_history',
+						nonce: ssiData.nonce
+					},
+					success: function() {
+						location.href = location.href.split('#')[0] + '#ssi-tab-history';
+						location.reload();
+					},
+					error: function() {
+						alert( ssiData.i18n.loadFailed );
+						clear.disabled = false;
+						if ( icon ) { icon.classList.remove( 'dashicons-update-spin' ); }
+					}
+				} );
+			});
+		}
 	}
 
 	// ── Init ──────────────────────────────────────────────────────────────
@@ -1083,7 +1122,7 @@
 		initCopyValue();
 		initExportBtn();
 		initPrintBtn();
-		initDarkToggle();
+		initPrintBtn();
 		initTabs();
 		initTools();
 		initDebugLog();
@@ -1096,6 +1135,7 @@
 		initNoticesDismiss();
 		initDevLazyLoad();
 		initDevInteractions();
+		initTimeline();
 		initA11y();
 	} );
 

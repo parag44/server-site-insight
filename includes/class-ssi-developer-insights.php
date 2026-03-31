@@ -24,18 +24,9 @@ class SSI_Developer_Insights {
 		add_action( 'wp_ajax_ssi_lazy_plugin_impact', array( __CLASS__, 'ajax_lazy_plugin_impact' ) );
 		add_action( 'wp_ajax_ssi_run_cron_task', array( __CLASS__, 'ajax_run_cron_task' ) );
 		add_action( 'wp_ajax_ssi_verify_core_checksums', array( __CLASS__, 'ajax_verify_core_checksums' ) );
-		add_action( 'wp_ajax_ssi_lazy_activity_log', array( __CLASS__, 'ajax_lazy_activity_log' ) );
+		add_action( 'wp_ajax_ssi_verify_core_checksums', array( __CLASS__, 'ajax_verify_core_checksums' ) );
 
 		add_action( 'shutdown', array( __CLASS__, 'log_slow_queries_on_shutdown' ) );
-
-		// Activity Log Hooks
-		add_action( 'wp_login', array( __CLASS__, 'log_login' ), 10, 2 );
-		add_action( 'save_post', array( __CLASS__, 'log_post_save' ), 10, 3 );
-		add_action( 'deleted_post', array( __CLASS__, 'log_post_deletion' ) );
-		add_action( 'activated_plugin', array( __CLASS__, 'log_plugin_activation' ) );
-		add_action( 'deactivated_plugin', array( __CLASS__, 'log_plugin_deactivation' ) );
-		add_action( 'switch_theme', array( __CLASS__, 'log_theme_switch' ) );
-		add_action( 'upgrader_process_complete', array( __CLASS__, 'log_update' ), 10, 2 );
 	}
 
 	// ── Fast Real-Time Stats (Loaded immediately) ────────────────────────────────────
@@ -718,68 +709,7 @@ class SSI_Developer_Insights {
 	}
 
 	/**
-	 * Log a user action.
+	 * Log a slow query (placeholder logic, usually used on shutdown).
 	 */
-	public static function log_action( $action, $details = '' ) {
-		$logs = get_option( 'ssi_activity_log', array() );
-		$user = wp_get_current_user();
-		
-		array_unshift( $logs, array(
-			'time'    => current_time( 'mysql' ),
-			'user'    => $user->display_name ? $user->display_name : 'System',
-			'action'  => $action,
-			'details' => $details,
-		) );
-
-		// Keep only last 50 logs
-		if ( count( $logs ) > 50 ) {
-			$logs = array_slice( $logs, 0, 50 );
-		}
-
-		update_option( 'ssi_activity_log', $logs, false );
-	}
-
-	public static function log_login( $user_login, $user ) {
-		self::log_action( __( 'User Login', 'server-site-insight' ), sprintf( __( 'User %s logged in.', 'server-site-insight' ), $user_login ) );
-	}
-
-	public static function log_post_save( $post_id, $post, $update ) {
-		if ( wp_is_post_revision( $post_id ) || 'auto-draft' === $post->post_status ) {
-			return;
-		}
-		$action = $update ? __( 'Updated Post', 'server-site-insight' ) : __( 'Created Post', 'server-site-insight' );
-		self::log_action( $action, sprintf( '"%s" (ID: %d, Type: %s)', $post->post_title, $post_id, $post->post_type ) );
-	}
-
-	public static function log_post_deletion( $post_id ) {
-		$post = get_post( $post_id );
-		if ( $post ) {
-			self::log_action( __( 'Deleted Post', 'server-site-insight' ), sprintf( '"%s" (ID: %d)', $post->post_title, $post_id ) );
-		}
-	}
-
-	public static function log_plugin_activation( $plugin ) {
-		self::log_action( __( 'Activated Plugin', 'server-site-insight' ), $plugin );
-	}
-
-	public static function log_plugin_deactivation( $plugin ) {
-		self::log_action( __( 'Deactivated Plugin', 'server-site-insight' ), $plugin );
-	}
-
-	public static function log_theme_switch( $new_name ) {
-		self::log_action( __( 'Switched Theme', 'server-site-insight' ), sprintf( __( 'Switched to %s', 'server-site-insight' ), $new_name ) );
-	}
-
-	public static function log_update( $upgrader, $options ) {
-		if ( 'update' === $options['action'] ) {
-			$type = isset( $options['type'] ) ? $options['type'] : 'unknown';
-			self::log_action( __( 'System Update', 'server-site-insight' ), sprintf( __( 'Updated %s', 'server-site-insight' ), $type ) );
-		}
-	}
-
-	public static function ajax_lazy_activity_log() {
-		self::verify_ajax();
-		$logs = get_option( 'ssi_activity_log', array() );
-		wp_send_json_success( array( 'logs' => $logs ) );
-	}
+	// log_slow_queries_on_shutdown is already defined above...
 }

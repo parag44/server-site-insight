@@ -15,10 +15,9 @@ $ssi_checks   = SSI_Health_Check::run( $ssi_info );
 $ssi_overall  = SSI_Health_Check::overall_status( $ssi_checks );
 $ssi_score    = SSI_Health_Score::calculate( $ssi_checks );
 $ssi_grade    = SSI_Health_Score::grade( $ssi_score );
-$ssi_latest   = SSI_Tracker::get_latest();
-$ssi_changes  = SSI_Tracker::get_changes();
-$ssi_history  = SSI_Tracker::get_history();
-$ssi_dark     = SSI_Settings::get( 'dark_mode', false );
+$ssi_latest   = SSI_History_Storage::get_latest();
+$ssi_changes  = SSI_History_Storage::get_changes();
+$ssi_history  = SSI_History_Storage::get_history();
 
 // ── Template helpers ───────────────────────────────────────────────────────
 function ssi_badge( $status ) {
@@ -57,7 +56,7 @@ function ssi_row( $label, $value, $tooltip = '' ) {
 	<?php do_action( 'all_admin_notices' ); ?>
 </div>
 
-<div id="ssi-app" class="ssi-wrap<?php echo $ssi_dark ? ' ssi-dark' : ''; ?>" data-score="<?php echo esc_attr( $ssi_score ); ?>" data-overall="<?php echo esc_attr( $ssi_overall ); ?>">
+<div id="ssi-app" class="ssi-wrap" data-score="<?php echo esc_attr( $ssi_score ); ?>" data-overall="<?php echo esc_attr( $ssi_overall ); ?>">
 
 	<!-- ═══ STICKY SUMMARY BAR ════════════════════════════════════════════ -->
 	<div class="ssi-sticky-bar ssi-sticky-bar--<?php echo esc_attr( $ssi_overall ); ?>" id="ssi-sticky-bar" role="banner">
@@ -90,10 +89,6 @@ function ssi_row( $label, $value, $tooltip = '' ) {
 					<button class="ssi-filter-btn" data-filter="warning" type="button"><?php esc_html_e( 'Warnings', 'server-site-insight' ); ?></button>
 					<button class="ssi-filter-btn" data-filter="critical" type="button"><?php esc_html_e( 'Critical', 'server-site-insight' ); ?></button>
 				</div>
-				<!-- Dark mode toggle -->
-				<button id="ssi-dark-toggle" type="button" class="ssi-icon-btn" aria-label="<?php esc_attr_e( 'Toggle dark mode', 'server-site-insight' ); ?>" title="<?php esc_attr_e( 'Toggle dark mode', 'server-site-insight' ); ?>">
-					<span class="dashicons dashicons-<?php echo esc_attr( $ssi_dark ? 'sun' : 'visibility' ); ?>" aria-hidden="true"></span>
-				</button>
 				<!-- Copy report -->
 				<button id="ssi-copy-btn" type="button" class="ssi-icon-btn" aria-label="<?php esc_attr_e( 'Copy report', 'server-site-insight' ); ?>" title="<?php esc_attr_e( 'Copy Report', 'server-site-insight' ); ?>">
 					<span class="dashicons dashicons-clipboard" aria-hidden="true"></span>
@@ -154,7 +149,7 @@ function ssi_row( $label, $value, $tooltip = '' ) {
 					sprintf(
 						/* translators: %s: human-readable time elapsed, e.g. "5 minutes ago" */
 						__( 'Last checked: <strong>%s</strong>', 'server-site-insight' ),
-						esc_html( SSI_Tracker::time_ago( $ssi_latest['timestamp'] ) )
+						esc_html( SSI_History_Storage::time_ago( $ssi_latest['timestamp'] ) )
 					),
 					array( 'strong' => array() )
 				);
@@ -411,13 +406,13 @@ function ssi_row( $label, $value, $tooltip = '' ) {
 			<span class="ssi-tab-badge ssi-tab-badge--dev"><?php esc_html_e( 'DEV', 'server-site-insight' ); ?></span>
 		</button>
 		<?php endif; ?>
-		<?php if ( count( $ssi_history ) > 1 ) : ?>
+		<!-- History Tab (Activity Audit Log) -->
 		<button class="ssi-tab-btn" role="tab" id="ssi-tab-history"
 			aria-controls="ssi-panel-history" aria-selected="false" type="button">
 			<span class="dashicons dashicons-chart-line" aria-hidden="true"></span>
 			<?php esc_html_e( 'History', 'server-site-insight' ); ?>
 		</button>
-		<?php endif; ?>
+
 		<!-- Tools tab — always visible to manage_options users -->
 		<button class="ssi-tab-btn" role="tab" id="ssi-tab-tools"
 			aria-controls="ssi-panel-tools" aria-selected="false" type="button">
@@ -662,56 +657,7 @@ function ssi_row( $label, $value, $tooltip = '' ) {
 	<?php endif; ?>
 
 	<!-- ═══ TAB PANEL 4: HISTORY ═════════════════════════════════════════ -->
-	<?php if ( count( $ssi_history ) > 1 ) : ?>
-	<div id="ssi-panel-history" role="tabpanel" aria-labelledby="ssi-tab-history" class="ssi-tab-panel" hidden>
-
-		<section class="ssi-history-section" aria-labelledby="ssi-ttl-hist">
-			<h2 class="ssi-section-title" id="ssi-ttl-hist">
-				<span class="dashicons dashicons-chart-line" aria-hidden="true"></span>
-				<?php esc_html_e( 'Score History', 'server-site-insight' ); ?>
-			</h2>
-			<div class="ssi-history-chart" aria-label="<?php esc_attr_e( 'Health score history chart', 'server-site-insight' ); ?>">
-				<?php foreach ( array_slice( $ssi_history, -14 ) as $snap ) : // last 14 days ?>
-					<?php
-					$ssi_bar_h      = max( 4, (int) round( $snap['score'] / 100 * 100 ) );
-					$ssi_bar_status = SSI_Health_Score::label( (int) $snap['score'] );
-					$ssi_bar_title  = sprintf(
-						/* translators: 1: date string YYYY-MM-DD, 2: health score integer */
-						__( '%1$s: %2$d/100', 'server-site-insight' ),
-						$snap['date'],
-						(int) $snap['score']
-					);
-					$ssi_bar_label  = sprintf(
-						/* translators: 1: date string YYYY-MM-DD, 2: health score integer */
-						__( '%1$s score: %2$d', 'server-site-insight' ),
-						$snap['date'],
-						(int) $snap['score']
-					);
-					?>
-					<div class="ssi-history-bar-wrap" title="<?php echo esc_attr( $ssi_bar_title ); ?>">
-						<span class="ssi-history-bar__score"><?php echo esc_html( $snap['score'] ); ?></span>
-						<div class="ssi-history-bar ssi-history-bar--<?php echo esc_attr( $ssi_bar_status ); ?>" style="height:<?php echo esc_attr( $ssi_bar_h ); ?>%" role="img" aria-label="<?php echo esc_attr( $ssi_bar_label ); ?>"></div>
-						<span class="ssi-history-bar__date"><?php echo esc_html( substr( $snap['date'], 5 ) ); ?></span>
-					</div>
-				<?php endforeach; ?>
-			</div>
-		</section>
-
-		<p class="ssi-footer">
-			<?php
-			echo wp_kses(
-				sprintf(
-					/* translators: 1: plugin name and version in <strong>, 2: timestamp string */
-					__( '%1$s &mdash; Report generated on %2$s', 'server-site-insight' ),
-					'<strong>Server &amp; Site Insight v' . esc_html( SSI_VERSION ) . '</strong>',
-					esc_html( current_time( 'Y-m-d H:i:s' ) )
-				),
-				array( 'strong' => array() )
-			);
-			?>
-		</p>
-
-	<?php endif; ?>
+	<?php require_once SSI_PLUGIN_DIR . 'admin/views/history-page.php'; ?>
 
 	<?php
 	// ═══ TAB PANEL 5: TOOLS ══════════════════════════════════════════════

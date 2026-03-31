@@ -36,7 +36,6 @@ if ( 'POST' === $_SERVER['REQUEST_METHOD'] && isset( $_POST['ssi_settings_nonce'
 		'enable_email_alerts' => ! empty( $raw['enable_email_alerts'] ),
 		'enable_notices'      => ! empty( $raw['enable_notices'] ),
 		'developer_mode'      => ! empty( $raw['developer_mode'] ),
-		'dark_mode'           => ! empty( $raw['dark_mode'] ),
 		'alert_email'         => isset( $raw['alert_email'] ) ? sanitize_email( wp_unslash( $raw['alert_email'] ) ) : '',
 	);
 
@@ -151,25 +150,6 @@ $s = SSI_Settings::all(); // Current settings.
 				</label>
 				<label for="ssi-f-dev-mode" class="ssi-field__label">
 					<?php esc_html_e( 'Enable Developer Mode', 'server-site-insight' ); ?>
-				</label>
-			</div>
-		</div>
-
-		<!-- ── Appearance ────────────────────────────────────────────────── -->
-		<div class="ssi-settings-card">
-			<h2 class="ssi-settings-card__title">
-				<span class="dashicons dashicons-admin-appearance" aria-hidden="true"></span>
-				<?php esc_html_e( 'Appearance', 'server-site-insight' ); ?>
-			</h2>
-			<div class="ssi-field">
-				<label class="ssi-toggle">
-					<input type="checkbox" name="ssi[dark_mode]" value="1"
-						id="ssi-f-dark-mode"
-						<?php checked( $s['dark_mode'] ); ?>>
-					<span class="ssi-toggle__slider"></span>
-				</label>
-				<label for="ssi-f-dark-mode" class="ssi-field__label">
-					<?php esc_html_e( 'Enable dark mode by default', 'server-site-insight' ); ?>
 				</label>
 			</div>
 		</div>

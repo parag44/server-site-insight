@@ -206,8 +206,8 @@ class SSI_Rest_API {
 	 */
 	public static function handle_history( $request ) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 		return self::make_response( array(
-			'history' => SSI_Tracker::get_history(),
-			'changes' => SSI_Tracker::get_changes(),
+			'history' => SSI_History_Storage::get_history(),
+			'changes' => SSI_History_Storage::get_changes(),
 		) );
 	}
 

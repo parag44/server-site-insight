@@ -61,12 +61,14 @@ function ssi_load_includes() {
 		'includes/class-ssi-system-info.php',
 		'includes/class-ssi-health-score.php',
 		'includes/class-ssi-health-check.php',
-		'includes/class-ssi-tracker.php',
+		'includes/class-ssi-history-storage.php',
+		'includes/class-ssi-history-tracker.php',
 		'includes/class-ssi-alerts.php',
 		'includes/class-ssi-rest-api.php',
 		'includes/class-ssi-tools.php',
 		'includes/class-ssi-debug-log.php',
 		'includes/class-ssi-developer-insights.php',
+		'includes/class-ssi-activity-logger.php',
 	);
 	foreach ( $files as $f ) {
 		require_once SSI_PLUGIN_DIR . $f;
@@ -77,6 +79,8 @@ function ssi_load_includes() {
 	SSI_Debug_Log::init();
 	// Boot developer lazy loading.
 	SSI_Developer_Insights::init();
+	// Boot activity logging.
+	SSI_Activity_Logger::init();
 }
 add_action( 'plugins_loaded', 'ssi_load_includes' );
 
@@ -141,7 +145,13 @@ function ssi_render_admin_page() {
 	if ( ! current_user_can( SSI_CAPABILITY ) ) {
 		wp_die( esc_html__( 'You do not have sufficient permissions to access this page.', 'server-site-insight' ) );
 	}
-	SSI_Tracker::maybe_capture();
+	
+	// Force Refresh
+	if ( isset( $_GET['ssi_refresh'] ) && '1' === $_GET['ssi_refresh'] ) {
+		SSI_System_Info::purge_cache();
+	}
+
+	SSI_History_Tracker::maybe_capture();
 	require_once SSI_PLUGIN_DIR . 'admin/views/admin-page.php';
 }
 
@@ -270,7 +280,6 @@ function ssi_ajax_save_settings() {
 		'enable_email_alerts' => ! empty( $raw['enable_email_alerts'] ),
 		'enable_notices'      => ! empty( $raw['enable_notices'] ),
 		'developer_mode'      => ! empty( $raw['developer_mode'] ),
-		'dark_mode'           => ! empty( $raw['dark_mode'] ),
 		'alert_email'         => isset( $raw['alert_email'] ) ? sanitize_email( wp_unslash( $raw['alert_email'] ) ) : '',
 	);
 
@@ -299,6 +308,23 @@ function ssi_ajax_dismiss_notice() {
 }
 add_action( 'wp_ajax_ssi_dismiss_notice', 'ssi_ajax_dismiss_notice' );
 add_action( 'wp_ajax_nopriv_ssi_dismiss_notice', 'ssi_ajax_no_priv' );
+
+/**
+ * AJAX: clear all audit history.
+ */
+function ssi_ajax_clear_history() {
+	if ( ! isset( $_POST['nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['nonce'] ) ), 'ssi_ajax_nonce' ) ) {
+		wp_send_json_error( array( 'message' => __( 'Security check failed.', 'server-site-insight' ) ), 403 );
+	}
+	if ( ! current_user_can( SSI_CAPABILITY ) ) {
+		wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'server-site-insight' ) ), 403 );
+	}
+	
+	SSI_History_Storage::clear_all();
+	wp_send_json_success( array( 'message' => __( 'Audit history cleared.', 'server-site-insight' ) ) );
+}
+add_action( 'wp_ajax_ssi_clear_history', 'ssi_ajax_clear_history' );
+add_action( 'wp_ajax_nopriv_ssi_clear_history', 'ssi_ajax_no_priv' );
 
 /**
  * Shared callback for unauthenticated AJAX requests to privileged actions.

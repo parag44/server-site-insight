@@ -24,8 +24,8 @@ class SSI_System_Info {
 	const CACHE_KEY     = 'ssi_system_info';
 	const CACHE_KEY_DEV = 'ssi_system_info_dev';
 
-	/** Cache lifetime in seconds (5 minutes). @var int */
-	const CACHE_TTL = 300;
+	/** Cache lifetime in seconds (1 minute). @var int */
+	const CACHE_TTL = 60;
 
 	// -----------------------------------------------------------------------
 	// Public API

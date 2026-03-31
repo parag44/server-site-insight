@@ -132,6 +132,9 @@ class SSI_Tools {
 			}
 			
 			SSI_System_Info::purge_cache();
+			// Force an immediate history snapshot for the timeline.
+			SSI_History_Tracker::maybe_capture( true );
+
 			wp_send_json_success( array(
 				'requires_manual' => false,
 				'reload'          => true,
@@ -160,6 +163,9 @@ class SSI_Tools {
 			}
 			
 			SSI_System_Info::purge_cache();
+			// Force an immediate history snapshot for the timeline.
+			SSI_History_Tracker::maybe_capture( true );
+
 			wp_send_json_success( array(
 				'requires_manual' => false,
 				'reload'          => true,
@@ -208,6 +214,9 @@ class SSI_Tools {
 		// reads the updated constant value instead of stale cached data.
 		SSI_System_Info::purge_cache();
 
+		// Force an immediate history snapshot for the timeline.
+		SSI_History_Tracker::maybe_capture( true );
+
 		wp_send_json_success(
 			array(
 				'requires_manual' => false,
@@ -228,6 +237,9 @@ class SSI_Tools {
 	private static function ajax_toggle_xmlrpc() {
 		$disabled = ! empty( $_POST['disabled'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['disabled'] ) );
 		update_option( 'ssi_xmlrpc_disabled', $disabled );
+
+		// Force an immediate history snapshot for the timeline.
+		SSI_History_Tracker::maybe_capture( true );
 
 		wp_send_json_success(
 			array(

@@ -451,17 +451,199 @@
 .ssi-check-item__rec .dashicons { color: var(--ssi-accent); flex-shrink: 0; font-size: 14px !important; height: 14px !important; width: 14px !important; }
 
 /* ============================================================
-   12. History Chart
+   12. Activity Audit Log
    ============================================================ */
-.ssi-history-section { margin-bottom: var(--ssi-lg); }
-.ssi-history-chart { align-items: flex-end; background: var(--ssi-surface); border: 1px solid var(--ssi-border); border-radius: var(--ssi-radius); display: flex; gap: 6px; min-height: 120px; padding: var(--ssi-md); }
-.ssi-history-bar-wrap { align-items: center; display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
-.ssi-history-bar { border-radius: 3px 3px 0 0; min-height: 4px; transition: height .4s ease; width: 100%; }
-.ssi-history-bar--good     { background: var(--ssi-good); }
-.ssi-history-bar--warning  { background: var(--ssi-warn); }
-.ssi-history-bar--critical { background: var(--ssi-crit); }
-.ssi-history-bar__score { color: var(--ssi-text-muted); font-size: 10px; font-weight: 700; }
-.ssi-history-bar__date  { color: var(--ssi-text-muted); font-size: 9px; text-align: center; white-space: nowrap; }
+.ssi-audit-table-wrap {
+	background: var(--ssi-surface);
+	border: 1px solid var(--ssi-border);
+	border-radius: var(--ssi-radius);
+	box-shadow: var(--ssi-shadow-sm);
+	overflow: hidden;
+	margin-top: var(--ssi-md);
+}
+
+.ssi-audit-table {
+	border-collapse: collapse;
+	margin: 0;
+	width: 100%;
+}
+
+.ssi-audit-table thead th {
+	background: var(--ssi-surface-2);
+	border-bottom: 1px solid var(--ssi-border);
+	color: var(--ssi-text-muted);
+	font-size: 11px;
+	font-weight: 700;
+	padding: 12px 16px;
+	text-align: left;
+	text-transform: uppercase;
+}
+
+.ssi-audit-row {
+	border-bottom: 1px solid var(--ssi-border);
+	transition: background 0.2s;
+}
+
+.ssi-audit-row:hover { background: var(--ssi-surface-2); }
+.ssi-audit-row:last-child { border-bottom: none; }
+
+.ssi-audit-row td {
+	padding: 16px;
+	vertical-align: middle;
+}
+
+/* Columns */
+.ssi-audit-col--time { width: 140px; }
+.ssi-audit-col--user { width: 160px; }
+.ssi-audit-col--ip { width: 120px; }
+
+/* Date & Time Column */
+.ssi-audit-time { display: flex; flex-direction: column; cursor: help; }
+.ssi-audit-time strong { color: var(--ssi-text); font-size: 13px; font-weight: 600; }
+.ssi-audit-time span { color: var(--ssi-text-muted); font-family: var(--ssi-font-mono); font-size: 11px; }
+.ssi-audit-time small { color: var(--ssi-accent); opacity: 0.7; }
+
+/* User Column */
+.ssi-audit-user { display: flex; flex-direction: column; gap: 4px; }
+.ssi-audit-user strong { color: var(--ssi-text); font-size: 13px; font-weight: 700; }
+.ssi-audit-role {
+	background: var(--ssi-accent-light);
+	border-radius: 4px;
+	color: var(--ssi-accent-dark);
+	display: inline-block;
+	font-size: 9px;
+	font-weight: 800;
+	padding: 2px 6px;
+	text-transform: uppercase;
+	width: fit-content;
+}
+
+/* Event Column */
+.ssi-audit-event { align-items: flex-start; display: flex; gap: 12px; }
+.ssi-audit-icon {
+	align-items: center;
+	background: var(--ssi-surface-2);
+	border-radius: 6px;
+	color: var(--ssi-text-muted);
+	display: flex;
+	height: 32px;
+	justify-content: center;
+	width: 32px;
+}
+.ssi-audit-icon.dashicons { font-size: 18px !important; height: 18px !important; width: 18px !important; }
+
+.ssi-audit-event-desc { display: flex; flex-direction: column; gap: 4px; }
+.ssi-audit-message { color: var(--ssi-text); font-size: 14px; font-weight: 500; margin: 0; }
+
+/* Category Badges */
+.ssi-audit-category {
+	border-radius: 4px;
+	display: inline-block;
+	font-size: 9px;
+	font-weight: 800;
+	padding: 2px 6px;
+	text-transform: uppercase;
+	width: fit-content;
+}
+
+.ssi-audit-category--system { background: #E0E7FF; color: #3730A3; }
+.ssi-audit-category--content { background: #DCFCE7; color: #166534; }
+.ssi-audit-category--user { background: #FEF3C7; color: #92400E; }
+.ssi-audit-category--plugin { background: #FAE8FF; color: #86198F; }
+.ssi-audit-category--theme { background: #fdf2f8; color: #9d174d; }
+
+/* IP Column */
+.ssi-audit-ip { 
+	background: var(--ssi-surface-2);
+	border: 1px solid var(--ssi-border);
+	border-radius: 4px;
+	color: var(--ssi-text-muted);
+	font-family: var(--ssi-font-mono);
+	font-size: 11px;
+	padding: 2px 6px;
+}
+
+/* Diff Displays */
+.ssi-audit-diffs {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-top: 8px;
+}
+
+.ssi-audit-diff-item {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.ssi-audit-diff-label {
+	color: var(--ssi-text-muted);
+	font-size: 11px;
+	font-weight: 700;
+	min-width: 60px;
+	text-transform: uppercase;
+}
+
+.ssi-audit-diff-from {
+	background: #FEE2E2;
+	border-radius: 4px;
+	color: #991B1B;
+	font-family: var(--ssi-font-mono);
+	font-size: 11px;
+	padding: 2px 6px;
+	text-decoration: line-through;
+}
+
+.ssi-audit-diff-to {
+	background: #D1FAE5;
+	border-radius: 4px;
+	color: #065F46;
+	font-family: var(--ssi-font-mono);
+	font-size: 11px;
+	font-weight: 600;
+	padding: 2px 6px;
+}
+
+.ssi-audit-diff-item .dashicons {
+	color: var(--ssi-text-muted);
+	font-size: 14px !important;
+	height: 14px !important;
+	width: 14px !important;
+}
+
+/* Pagination */
+.ssi-audit-pagination {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	margin-top: 24px;
+	padding-top: 20px;
+	border-top: 1px solid var(--ssi-border);
+}
+
+.ssi-audit-pagination__info {
+	color: var(--ssi-text-muted);
+	font-size: 13px;
+	font-weight: 500;
+}
+
+.ssi-audit-pagination__links {
+	display: flex;
+	gap: 12px;
+}
+
+.ssi-audit-pagination__links .ssi-tool-btn {
+	padding: 8px 16px;
+	font-size: 13px;
+}
+
+.ssi-audit-pagination__links .dashicons {
+	font-size: 16px !important;
+	height: 16px !important;
+	width: 16px !important;
+}
 
 /* ============================================================
    13. REST API panel
