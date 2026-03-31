@@ -105,7 +105,7 @@ $ssi_timeline_paged = array_slice( $ssi_timeline, $offset, $items_per_page );
 			<div class="ssi-empty-state">
 				<span class="dashicons dashicons-info"></span>
 				<?php if ( ! $ssi_log['enabled'] ) : ?>
-					<p><?php esc_html_e( 'WordPress Debug Log is disabled. You need to enable debug mode in your wp-config.php to see system errors here.', 'server-site-insight' ); ?></p>
+					<p><?php esc_html_e( 'WordPress Debug Log is disabled. You need to enable debug mode from tools tab.', 'server-site-insight' ); ?></p>
 				<?php else : ?>
 					<p><?php esc_html_e( 'The debug.log file does not exist yet. This is usually good! It means no PHP errors have been recorded.', 'server-site-insight' ); ?></p>
 				<?php endif; ?>

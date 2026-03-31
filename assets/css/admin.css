@@ -1251,3 +1251,30 @@
 .ssi-logpage-empty .dashicons { font-size: 40px !important; height: 40px !important; opacity: .35; width: 40px !important; }
 .ssi-logpage-empty p { font-size: 14px; margin: 0; }
 
+/* Unified Empty State */
+.ssi-empty-state {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 16px 20px;
+	background: var(--ssi-surface-2);
+	border-radius: var(--ssi-radius-md);
+	color: var(--ssi-text-muted);
+	border: 1px dashed var(--ssi-border);
+	margin: 20px 0;
+}
+
+.ssi-empty-state p {
+	margin: 0 !important;
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.ssi-empty-state .dashicons {
+	color: var(--ssi-accent);
+	font-size: 20px;
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+}
+
