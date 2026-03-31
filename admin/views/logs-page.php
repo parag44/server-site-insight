@@ -84,12 +84,12 @@ $ssi_timeline_paged = array_slice( $ssi_timeline, $offset, $items_per_page );
 			</div>
 
 			<div class="ssi-log-filters" id="ssi-log-filters" hidden>
-				<button type="button" class="ssi-log-filter ssi-log-filter--active" data-type="fatal"><?php esc_html_e( 'Fatal error', 'server-site-insight' ); ?> <span id="ssi-count-fatal"></span></button>
+				<button type="button" class="ssi-log-filter ssi-log-filter--active" data-type="all"><?php esc_html_e( 'All errors', 'server-site-insight' ); ?> <span id="ssi-count-all"></span></button>
+				<button type="button" class="ssi-log-filter" data-type="fatal"><?php esc_html_e( 'Fatal error', 'server-site-insight' ); ?> <span id="ssi-count-fatal"></span></button>
 				<button type="button" class="ssi-log-filter" data-type="warning"><?php esc_html_e( 'Warning', 'server-site-insight' ); ?> <span id="ssi-count-warning"></span></button>
 				<button type="button" class="ssi-log-filter" data-type="parse"><?php esc_html_e( 'Parse error', 'server-site-insight' ); ?> <span id="ssi-count-parse"></span></button>
 				<button type="button" class="ssi-log-filter" data-type="notice"><?php esc_html_e( 'Notice', 'server-site-insight' ); ?> <span id="ssi-count-notice"></span></button>
 				<button type="button" class="ssi-log-filter" data-type="deprecated"><?php esc_html_e( 'Deprecated', 'server-site-insight' ); ?> <span id="ssi-count-deprecated"></span></button>
-				<button type="button" class="ssi-log-filter" data-type="all"><?php esc_html_e( 'All errors', 'server-site-insight' ); ?> <span id="ssi-count-all"></span></button>
 			</div>
 		</div>
 

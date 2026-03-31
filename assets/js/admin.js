@@ -376,7 +376,7 @@
 	function initDebugLog() {
 		var nonce      = ( ssiData && ssiData.toolsNonce ) || '';
 		var allLines   = [];
-		var activeType = 'fatal';
+		var activeType = 'all';
 
 		var viewBtn    = document.getElementById( 'ssi-view-log' );
 		var clearBtn   = document.getElementById( 'ssi-clear-log' );
