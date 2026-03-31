@@ -133,7 +133,7 @@ function ssi_tool_row( $id, $label, $desc, $checked, $data_attrs = array(), $ext
 					<div class="ssi-tool-row__info">
 						<label class="ssi-tool-row__label" for="ssi-toggle-production-mode">
 							<?php if ( $ssi_production_active ) : ?>
-								<strong><?php esc_html_e( 'Enable Development Mode', 'server-site-insight' ); ?></strong>
+								<strong><?php esc_html_e( 'Disable Production Mode', 'server-site-insight' ); ?></strong>
 							<?php else : ?>
 								<strong><?php esc_html_e( 'Enable Production Mode', 'server-site-insight' ); ?></strong>
 							<?php endif; ?>
