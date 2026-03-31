@@ -84,20 +84,31 @@ $ssi_timeline_paged = array_slice( $ssi_timeline, $offset, $items_per_page );
 			</div>
 
 			<div class="ssi-log-filters" id="ssi-log-filters" hidden>
-				<button type="button" class="ssi-log-filter ssi-log-filter--active" data-type="all"><?php esc_html_e( 'All', 'server-site-insight' ); ?> <span id="ssi-count-all"></span></button>
-				<button type="button" class="ssi-log-filter" data-type="fatal"><?php esc_html_e( 'Fatal', 'server-site-insight' ); ?> <span id="ssi-count-fatal"></span></button>
+				<button type="button" class="ssi-log-filter ssi-log-filter--active" data-type="fatal"><?php esc_html_e( 'Fatal error', 'server-site-insight' ); ?> <span id="ssi-count-fatal"></span></button>
 				<button type="button" class="ssi-log-filter" data-type="warning"><?php esc_html_e( 'Warning', 'server-site-insight' ); ?> <span id="ssi-count-warning"></span></button>
+				<button type="button" class="ssi-log-filter" data-type="parse"><?php esc_html_e( 'Parse error', 'server-site-insight' ); ?> <span id="ssi-count-parse"></span></button>
+				<button type="button" class="ssi-log-filter" data-type="notice"><?php esc_html_e( 'Notice', 'server-site-insight' ); ?> <span id="ssi-count-notice"></span></button>
+				<button type="button" class="ssi-log-filter" data-type="deprecated"><?php esc_html_e( 'Deprecated', 'server-site-insight' ); ?> <span id="ssi-count-deprecated"></span></button>
+				<button type="button" class="ssi-log-filter" data-type="all"><?php esc_html_e( 'All errors', 'server-site-insight' ); ?> <span id="ssi-count-all"></span></button>
 			</div>
 		</div>
 
 		<div class="ssi-log-output" id="ssi-log-output" hidden>
+			<div class="ssi-log-toolbar">
+				<span id="ssi-log-entry-count" class="ssi-log-entry-count"></span>
+				<span class="ssi-log-tail-note"><?php esc_html_e( 'Showing last 200 entries', 'server-site-insight' ); ?></span>
+			</div>
 			<pre class="ssi-log-pre"><code id="ssi-log-code"></code></pre>
 		</div>
 
 		<?php if ( ! $ssi_log['exists'] ) : ?>
 			<div class="ssi-empty-state">
 				<span class="dashicons dashicons-info"></span>
-				<p><?php esc_html_e( 'The debug.log file does not exist yet. This is usually good! It means no PHP errors have been recorded.', 'server-site-insight' ); ?></p>
+				<?php if ( ! $ssi_log['enabled'] ) : ?>
+					<p><?php esc_html_e( 'WordPress Debug Log is disabled. You need to enable debug mode in your wp-config.php to see system errors here.', 'server-site-insight' ); ?></p>
+				<?php else : ?>
+					<p><?php esc_html_e( 'The debug.log file does not exist yet. This is usually good! It means no PHP errors have been recorded.', 'server-site-insight' ); ?></p>
+				<?php endif; ?>
 			</div>
 		<?php endif; ?>
 

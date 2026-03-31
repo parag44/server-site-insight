@@ -339,7 +339,7 @@
 	}
 
 	function updateFilterCounts( lines ) {
-		var counts = { all: lines.length, warning: 0, fatal: 0, notice: 0, deprecated: 0 };
+		var counts = { all: lines.length, warning: 0, fatal: 0, notice: 0, deprecated: 0, parse: 0 };
 		lines.forEach( function ( l ) {
 			var t = classifyLogLine( l );
 			if ( counts[ t ] !== undefined ) { counts[ t ]++; }
@@ -376,7 +376,7 @@
 	function initDebugLog() {
 		var nonce      = ( ssiData && ssiData.toolsNonce ) || '';
 		var allLines   = [];
-		var activeType = 'all';
+		var activeType = 'fatal';
 
 		var viewBtn    = document.getElementById( 'ssi-view-log' );
 		var clearBtn   = document.getElementById( 'ssi-clear-log' );
