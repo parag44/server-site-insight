@@ -3,7 +3,7 @@
  * Plugin Name:       Server & Site Insight
  * Plugin URI:        https://parag.bd/server-site-insight
  * Description:       Comprehensive WordPress, server, and environment dashboard with health scoring, historical tracking, alerts, developer mode, security checks, and export tools.
- * Version:           2.0.0
+ * Version:           2.3.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Parag Das
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-define( 'SSI_VERSION',       '2.0.0' );
+define( 'SSI_VERSION',       '2.3.0' );
 define( 'SSI_PLUGIN_DIR',    plugin_dir_path( __FILE__ ) );
 define( 'SSI_PLUGIN_URL',    plugin_dir_url( __FILE__ ) );
 define( 'SSI_MIN_PHP',       '8.0' );
@@ -53,9 +53,40 @@ add_action( 'init', 'ssi_load_textdomain' );
 // ---------------------------------------------------------------------------
 
 /**
- * Require all class files. Runs on plugins_loaded so WP core is ready.
+ * Apply internal debug overrides before WordPress initializes its own error handler.
+ * This simulates WP_DEBUG/WP_DEBUG_LOG without touching wp-config.php.
  */
-function ssi_load_includes() {
+function ssi_apply_internal_debug_overrides() {
+	if ( ! is_admin() && ! current_user_can( 'manage_options' ) ) {
+		// Optional: could restrict the overrides to certain scenarios, 
+		// but typically we want it global if enabled.
+	}
+
+	$debug_enabled   = get_option( 'ssi_debug_enabled', false );
+	$log_enabled     = get_option( 'ssi_debug_log', false );
+	$display_enabled = get_option( 'ssi_debug_display', false );
+
+	if ( $debug_enabled ) {
+		error_reporting( E_ALL );
+		
+		if ( $display_enabled ) {
+			ini_set( 'display_errors', '1' );
+		} else {
+			ini_set( 'display_errors', '0' );
+		}
+
+		if ( $log_enabled ) {
+			ini_set( 'log_errors', '1' );
+			ini_set( 'error_log', WP_CONTENT_DIR . '/debug.log' );
+		}
+	}
+}
+ssi_apply_internal_debug_overrides();
+
+/**
+ * Initialize core components.
+ */
+function ssi_init_core() {
 	$files = array(
 		'includes/class-ssi-settings.php',
 		'includes/class-ssi-system-info.php',

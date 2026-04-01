@@ -17,14 +17,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Class SSI_Tools
- */
-class SSI_Tools {
+ *class SSI_Tools {
 
 	/** Nonce action shared between PHP and JS. */
 	const NONCE_ACTION = 'ssi_tools_nonce';
 
 	/**
-	 * Whitelisted wp-config.php constants this class may write.
+	 * Whitelisted wp-config.php constants this class may simulate.
 	 *
 	 * @var string[]
 	 */
@@ -34,7 +33,6 @@ class SSI_Tools {
 		'WP_DEBUG_DISPLAY',
 		'SAVEQUERIES',
 		'DISALLOW_FILE_EDIT',
-		'DISALLOW_FILE_MODS',
 	);
 
 	// ── Bootstrap ──────────────────────────────────────────────────────────
@@ -104,345 +102,162 @@ class SSI_Tools {
 	// ── Sub-handlers ───────────────────────────────────────────────────────
 
 	/**
-	 * Toggle Production Mode (disables WP_DEBUG, disables file editor, disables XML-RPC).
+	 * Toggle Production Mode (disables internal debug settings, XML-RPC).
 	 */
 	private static function ajax_toggle_production_mode() {
 		$enable = ! empty( $_POST['enable'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['enable'] ) );
 
 		if ( $enable ) {
 			// Turning ON Production Mode.
-			$res1 = self::write_config_constant( 'WP_DEBUG', 'false' );
-			$res2 = self::write_config_constant( 'WP_DEBUG_LOG', 'false' );
-			$res3 = self::write_config_constant( 'WP_DEBUG_DISPLAY', 'false' );
-			$res_sq = self::write_config_constant( 'SAVEQUERIES', 'false' );
-			$res4 = self::write_config_constant( 'DISALLOW_FILE_EDIT', 'true' );
+			update_option( 'ssi_debug_enabled', false );
+			update_option( 'ssi_debug_log', false );
+			update_option( 'ssi_debug_display', false );
+			update_option( 'ssi_savequeries_enabled', false );
+			update_option( 'ssi_disallow_file_edit', true ); // Simulator
 			update_option( 'ssi_xmlrpc_disabled', true );
 			update_option( 'ssi_production_mode', true );
 			
-			if ( is_wp_error( $res1 ) || is_wp_error( $res2 ) || is_wp_error( $res3 ) || is_wp_error( $res4 ) ) {
-				$snippet  = "define( 'WP_DEBUG', false );\n";
-				$snippet .= "define( 'WP_DEBUG_LOG', false );\n";
-				$snippet .= "define( 'WP_DEBUG_DISPLAY', false );\n";
-				$snippet .= "define( 'DISALLOW_FILE_EDIT', true );";
-				wp_send_json_success( array(
-					'requires_manual' => true,
-					'snippet'         => $snippet,
-					'message'         => __( 'wp-config.php is not writable. Please add these lines manually.', 'server-site-insight' ),
-				) );
-			}
-			
 			SSI_System_Info::purge_cache();
-			// Force an immediate history snapshot for the timeline.
 			SSI_History_Tracker::maybe_capture( true );
 
 			wp_send_json_success( array(
-				'requires_manual' => false,
-				'reload'          => true,
-				'message'         => __( 'Production Mode enabled. Debugging disabled and system locked down safely.', 'server-site-insight' ),
+				'reload'  => true,
+				'message' => __( 'Production Mode enabled. System locked down safely without touching core files.', 'server-site-insight' ),
 			) );
 		} else {
-			// Turning OFF Production Mode. Enable debug mode as requested.
-			$res1 = self::write_config_constant( 'WP_DEBUG', 'true' );
-			$res2 = self::write_config_constant( 'WP_DEBUG_LOG', 'true' );
-			$res3 = self::write_config_constant( 'WP_DEBUG_DISPLAY', 'true' );
-			$res_sq = self::write_config_constant( 'SAVEQUERIES', 'true' );
-			$res4 = self::write_config_constant( 'DISALLOW_FILE_EDIT', 'false' );
+			// Turning OFF Production Mode. Enable debug mode internally.
+			update_option( 'ssi_debug_enabled', true );
+			update_option( 'ssi_debug_log', true );
+			update_option( 'ssi_debug_display', true );
+			update_option( 'ssi_savequeries_enabled', true );
+			update_option( 'ssi_disallow_file_edit', false );
 			delete_option( 'ssi_xmlrpc_disabled' );
 			delete_option( 'ssi_production_mode' );
 			
-			if ( is_wp_error( $res1 ) || is_wp_error( $res2 ) || is_wp_error( $res3 ) || is_wp_error( $res4 ) ) {
-				$snippet  = "define( 'WP_DEBUG', true );\n";
-				$snippet .= "define( 'WP_DEBUG_LOG', true );\n";
-				$snippet .= "define( 'WP_DEBUG_DISPLAY', true );\n";
-				$snippet .= "define( 'DISALLOW_FILE_EDIT', false );";
-				wp_send_json_success( array(
-					'requires_manual' => true,
-					'snippet'         => $snippet,
-					'message'         => __( 'wp-config.php is not writable. Please modify these lines manually.', 'server-site-insight' ),
-				) );
-			}
-			
 			SSI_System_Info::purge_cache();
-			// Force an immediate history snapshot for the timeline.
 			SSI_History_Tracker::maybe_capture( true );
 
 			wp_send_json_success( array(
-				'requires_manual' => false,
-				'reload'          => true,
-				'message'         => __( 'Production Mode deactivated. Debugging enabled.', 'server-site-insight' ),
+				'reload'  => true,
+				'message' => __( 'Production Mode deactivated. Internal debugging enabled.', 'server-site-insight' ),
 			) );
 		}
 	}
 
 	/**
-	 * Toggle a wp-config.php boolean constant.
-	 * Returns a code snippet when the file cannot be written automatically.
+	 * Toggle an internal debug/security setting.
 	 */
 	private static function ajax_toggle_config_constant() {
-		$constant = isset( $_POST['constant'] )
-			? sanitize_text_field( wp_unslash( $_POST['constant'] ) )
-			: '';
+		$constant = isset( $_POST['constant'] ) ? sanitize_text_field( wp_unslash( $_POST['constant'] ) ) : '';
 
-		// Strict whitelist — never allow arbitrary constant names.
 		if ( ! in_array( $constant, self::$allowed_constants, true ) ) {
-			wp_send_json_error(
-				array( 'message' => __( 'Invalid constant name.', 'server-site-insight' ) )
-			);
+			wp_send_json_error( array( 'message' => __( 'Invalid setting.', 'server-site-insight' ) ) );
 		}
 
-		$value     = ! empty( $_POST['value'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['value'] ) );
-		$value_str = $value ? 'true' : 'false';
-		$result    = self::write_config_constant( $constant, $value_str );
+		$value = ! empty( $_POST['value'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['value'] ) );
+		
+		// Map the "constant" name to our internal option name.
+		$option_map = array(
+			'WP_DEBUG'           => 'ssi_debug_enabled',
+			'WP_DEBUG_LOG'       => 'ssi_debug_log',
+			'WP_DEBUG_DISPLAY'   => 'ssi_debug_display',
+			'SAVEQUERIES'        => 'ssi_savequeries_enabled',
+			'DISALLOW_FILE_EDIT' => 'ssi_disallow_file_edit',
+		);
 
-		if ( is_wp_error( $result ) ) {
-			// File not writable — return a safe snippet for manual editing.
-			$snippet = "define( '" . $constant . "', " . $value_str . ' );';
-			wp_send_json_success(
-				array(
-					'requires_manual' => true,
-					'snippet'         => $snippet,
-					/* translators: %s: PHP code snippet for manual insertion */
-					'message'         => sprintf(
-						__( 'wp-config.php is not writable. Please add this line manually: %s', 'server-site-insight' ),
-						$snippet
-					),
-				)
-			);
+		if ( isset( $option_map[ $constant ] ) ) {
+			update_option( $option_map[ $constant ], $value );
 		}
 
-		// Purge the 5-minute system info transient cache so the next page load
-		// reads the updated constant value instead of stale cached data.
 		SSI_System_Info::purge_cache();
-
-		// Force an immediate history snapshot for the timeline.
 		SSI_History_Tracker::maybe_capture( true );
 
-		wp_send_json_success(
-			array(
-				'requires_manual' => false,
-				'reload'          => true,
-				/* translators: 1: PHP constant name (e.g. WP_DEBUG), 2: value (true or false) */
-				'message'         => sprintf(
-					__( '%1$s set to %2$s successfully.', 'server-site-insight' ),
-					$constant,
-					$value_str
-				),
-			)
-		);
+		wp_send_json_success( array(
+			'reload'  => true,
+			'message' => sprintf( __( '%s updated successfully.', 'server-site-insight' ), $constant ),
+		) );
 	}
 
 	/**
-	 * Enable/disable XML-RPC via wp_options (no file editing needed).
+	 * Enable/disable XML-RPC via wp_options.
 	 */
 	private static function ajax_toggle_xmlrpc() {
 		$disabled = ! empty( $_POST['disabled'] ) && '1' === sanitize_text_field( wp_unslash( $_POST['disabled'] ) );
 		update_option( 'ssi_xmlrpc_disabled', $disabled );
-
-		// Force an immediate history snapshot for the timeline.
 		SSI_History_Tracker::maybe_capture( true );
 
-		wp_send_json_success(
-			array(
-				'message' => $disabled
-					? __( 'XML-RPC has been disabled.', 'server-site-insight' )
-					: __( 'XML-RPC has been re-enabled.', 'server-site-insight' ),
-			)
-		);
+		wp_send_json_success( array(
+			'message' => $disabled ? __( 'XML-RPC has been disabled.', 'server-site-insight' ) : __( 'XML-RPC has been re-enabled.', 'server-site-insight' ),
+		) );
 	}
 
 	/**
-	 * Delete all transients (option-table based).
+	 * Delete all transients.
 	 */
 	private static function ajax_clear_transients() {
 		global $wpdb;
-
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$count = (int) $wpdb->query(
-			"DELETE FROM {$wpdb->options}
-			 WHERE option_name LIKE '\_transient\_%'
-			    OR option_name LIKE '\_site\_transient\_%'"
-		);
-
-		wp_send_json_success(
-			array(
-				'count'   => $count,
-				/* translators: %d: number of transient rows deleted */
-				'message' => sprintf(
-					_n(
-						'%d transient cleared.',
-						'%d transients cleared.',
-						$count,
-						'server-site-insight'
-					),
-					$count
-				),
-			)
-		);
+		$count = (int) $wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\_transient\_%' OR option_name LIKE '\_site\_transient\_%'" );
+		wp_send_json_success( array( 'count'   => $count, 'message' => sprintf( _n( '%d transient cleared.', '%d transients cleared.', $count, 'server-site-insight' ), $count ) ) );
 	}
 
 	/**
-	 * Flush WordPress rewrite rules (hard flush).
+	 * Flush WordPress rewrite rules.
 	 */
 	private static function ajax_flush_rewrites() {
 		flush_rewrite_rules( true );
-		wp_send_json_success(
-			array(
-				'message' => __( 'Rewrite rules flushed successfully.', 'server-site-insight' ),
-			)
-		);
+		wp_send_json_success( array( 'message' => __( 'Rewrite rules flushed successfully.', 'server-site-insight' ) ) );
 	}
 
 	// ── Utilities ──────────────────────────────────────────────────────────
 
 	/**
-	 * Returns true if production mode is considered active.
-	 * Active means WP_DEBUG is false, DISALLOW_FILE_EDIT is true, and XML-RPC is disabled.
+	 * Returns true if production mode is active.
+	 * Now checks our internal database options.
 	 *
 	 * @return bool
 	 */
 	public static function is_production_mode_active() {
-		$debug       = self::get_constant_value( 'WP_DEBUG' );
-		$debug_log   = self::get_constant_value( 'WP_DEBUG_LOG' );
-		$debug_disp  = self::get_constant_value( 'WP_DEBUG_DISPLAY' );
-
-		// We consider Production Mode to be active securely if all debugging features are disabled. 
-		// This ensures accurate UI state even if users modify wp-config.php directly.
-		return ( false === $debug || null === $debug ) &&
-		       ( false === $debug_log || null === $debug_log ) &&
-		       ( false === $debug_disp || null === $debug_disp );
-	}
-
-	// ── wp-config.php utilities ────────────────────────────────────────────
-
-	/**
-	 * Locate wp-config.php (supports above-root hardened installs).
-	 *
-	 * @return string|false Absolute path or false.
-	 */
-	public static function get_config_path() {
-		$standard = ABSPATH . 'wp-config.php';
-		if ( file_exists( $standard ) ) {
-			return $standard;
+		$internal_prod = get_option( 'ssi_production_mode', false );
+		if ( $internal_prod ) {
+			return true;
 		}
 
-		// One directory up (hardened: moved above web-root).
-		$above = dirname( ABSPATH ) . '/wp-config.php';
-		if ( file_exists( $above ) && ! file_exists( dirname( ABSPATH ) . '/wp-settings.php' ) ) {
-			return $above;
-		}
-
-		return false;
-	}
-
-	/**
-	 * Whether wp-config.php exists and is writable.
-	 *
-	 * @return bool
-	 */
-	public static function config_is_writable() {
-		$path = self::get_config_path();
-		return $path && is_writable( $path );
+		// Fallback to checking effective constants if not explicitly set in our plugin.
+		$debug = self::get_constant_value( 'WP_DEBUG' );
+		return ( false === $debug || null === $debug );
 	}
 
 	/**
 	 * Return the current live value of a constant, or null if not defined.
-	 *
-	 * @param string $constant Constant name.
-	 * @return mixed|null
 	 */
 	public static function get_constant_value( $constant ) {
 		return defined( $constant ) ? constant( $constant ) : null;
 	}
 
 	/**
-	 * Write or update a `define( 'CONSTANT', value );` line in wp-config.php.
-	 *
-	 * Uses an atomic write (write to temp file, rename) to avoid partial writes.
-	 * Invalidates the OPcode cache afterwards.
-	 *
-	 * @param string $constant  Whitelisted constant name.
-	 * @param string $value_str 'true' or 'false'.
-	 * @return true|WP_Error
+	 * Legacy check - now always returns true as we don't touch files.
 	 */
-	private static function write_config_constant( $constant, $value_str ) {
-		$path = self::get_config_path();
-
-		if ( ! $path ) {
-			return new WP_Error(
-				'not_found',
-				__( 'wp-config.php not found.', 'server-site-insight' )
-			);
-		}
-
-		if ( ! is_writable( $path ) ) {
-			return new WP_Error(
-				'not_writable',
-				__( 'wp-config.php is not writable.', 'server-site-insight' )
-			);
-		}
-
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$content = file_get_contents( $path );
-		if ( false === $content ) {
-			return new WP_Error(
-				'read_error',
-				__( 'Could not read wp-config.php.', 'server-site-insight' )
-			);
-		}
-
-		$new_define = "define( '" . $constant . "', " . $value_str . ' );';
-		$escaped    = preg_quote( $constant, '/' );
-		// Matches: define('CONSTANT', anything);  — with any spacing/quote style.
-		$pattern = "/define\s*\(\s*['\"]" . $escaped . "['\"]\s*,[^)]+\)\s*;/";
-
-		if ( preg_match( $pattern, $content ) ) {
-			// Replace the existing define.
-			$content = preg_replace( $pattern, $new_define, $content );
-		} else {
-			// Insert before the "stop editing" marker, or append.
-			$marker = "/* That's all, stop editing!";
-			$pos    = strpos( $content, $marker );
-			if ( false !== $pos ) {
-				$content = substr_replace( $content, $new_define . "\n", $pos, 0 );
-			} else {
-				$content .= "\n" . $new_define . "\n";
-			}
-		}
-
-		// Atomic write: temp file in the same directory, then rename.
-		$tmp = $path . '.ssi-' . uniqid( '', true ) . '.tmp';
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_read_file_put_contents
-		if ( false === file_put_contents( $tmp, $content ) ) {
-			return new WP_Error(
-				'write_error',
-				__( 'Could not write temporary config file.', 'server-site-insight' )
-			);
-		}
-
-		// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-		if ( ! @rename( $tmp, $path ) ) {
-			// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-			@unlink( $tmp );
-			return new WP_Error(
-				'rename_error',
-				__( 'Could not replace wp-config.php.', 'server-site-insight' )
-			);
-		}
-
-		// Invalidate OPcode cache so PHP picks up the new file immediately.
-		if ( function_exists( 'opcache_invalidate' ) ) {
-			// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
-			@opcache_invalidate( $path, true );
-		}
-
+	public static function config_is_writable() {
 		return true;
 	}
 
 	/**
-	 * Clean up plugin options on uninstall (called from uninstall.php).
+	 * Returns false as we no longer help with manual path discovery.
+	 */
+	public static function get_config_path() {
+		return false;
+	}
+
+	/**
+	 * Clean up plugin options on uninstall.
 	 */
 	public static function cleanup() {
 		delete_option( 'ssi_xmlrpc_disabled' );
 		delete_option( 'ssi_production_mode' );
+		delete_option( 'ssi_debug_enabled' );
+		delete_option( 'ssi_debug_log' );
+		delete_option( 'ssi_debug_display' );
+		delete_option( 'ssi_savequeries_enabled' );
+		delete_option( 'ssi_disallow_file_edit' );
 	}
 }

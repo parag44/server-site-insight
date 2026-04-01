@@ -112,14 +112,16 @@ class SSI_Health_Check {
 	}
 
 	private static function check_debug( $on, $env ) {
-		if ( ! $on ) {
-			return self::make( self::STATUS_GOOD, __( 'Debug Mode', 'server-site-insight' ), __( 'Disabled', 'server-site-insight' ), __( 'WP_DEBUG is off.', 'server-site-insight' ), __( 'Debug mode outputs PHP errors publicly, exposing code paths to visitors.', 'server-site-insight' ), '' );
+		$internal_on = get_option( 'ssi_debug_enabled', false );
+		if ( ! $on && ! $internal_on ) {
+			return self::make( self::STATUS_GOOD, __( 'Debug Mode', 'server-site-insight' ), __( 'Disabled', 'server-site-insight' ), __( 'Debug mode is off.', 'server-site-insight' ), __( 'Debug mode outputs PHP errors publicly, exposing code paths to visitors.', 'server-site-insight' ), '' );
 		}
 		$prod = ( 'production' === $env );
-		return self::make( $prod ? self::STATUS_CRITICAL : self::STATUS_WARNING, __( 'Debug Mode', 'server-site-insight' ), __( 'Enabled', 'server-site-insight' ),
-			$prod ? __( 'WP_DEBUG ON in production — security risk!', 'server-site-insight' ) : __( 'WP_DEBUG enabled. Disable before going live.', 'server-site-insight' ),
+		$val  = ( $on ? 'WP_DEBUG' : 'Internal Debug' ) . ' ' . __( 'Enabled', 'server-site-insight' );
+		return self::make( $prod ? self::STATUS_CRITICAL : self::STATUS_WARNING, __( 'Debug Mode', 'server-site-insight' ), $val,
+			$prod ? __( 'Debug ON in production — security risk!', 'server-site-insight' ) : __( 'Debug mode enabled. Disable before going live.', 'server-site-insight' ),
 			__( 'Debug mode leaks file paths and code logic. Never enable on live sites.', 'server-site-insight' ),
-			__( "Set define('WP_DEBUG', false); in wp-config.php.", 'server-site-insight' ) );
+			__( 'Disable debug mode in the Tools tab.', 'server-site-insight' ) );
 	}
 
 	private static function check_https( $ssl ) {
@@ -175,21 +177,25 @@ class SSI_Health_Check {
 		return self::make( $enabled ? self::STATUS_WARNING : self::STATUS_GOOD, __( 'XML-RPC', 'server-site-insight' ), $enabled ? __( 'Enabled', 'server-site-insight' ) : __( 'Disabled', 'server-site-insight' ),
 			$enabled ? __( 'XML-RPC active — brute-force vector.', 'server-site-insight' ) : __( 'XML-RPC disabled.', 'server-site-insight' ),
 			__( 'XML-RPC is a legacy API used in brute-force and DDoS attacks. Disable unless required.', 'server-site-insight' ),
-			$enabled ? __( "Add add_filter('xmlrpc_enabled','__return_false'); to functions.php.", 'server-site-insight' ) : '' );
+			$enabled ? __( 'Disable XML-RPC in the Tools tab.', 'server-site-insight' ) : '' );
 	}
 
 	private static function check_debug_log( $on ) {
-		return self::make( $on ? self::STATUS_WARNING : self::STATUS_GOOD, __( 'Debug Log', 'server-site-insight' ), $on ? __( 'Enabled', 'server-site-insight' ) : __( 'Disabled', 'server-site-insight' ),
-			$on ? __( 'Debug log is writing errors.', 'server-site-insight' ) : __( 'Debug logging is off.', 'server-site-insight' ),
+		$internal_on = get_option( 'ssi_debug_log', false );
+		$effective_on = $on || $internal_on;
+		return self::make( $effective_on ? self::STATUS_WARNING : self::STATUS_GOOD, __( 'Debug Log', 'server-site-insight' ), $effective_on ? __( 'Enabled', 'server-site-insight' ) : __( 'Disabled', 'server-site-insight' ),
+			$effective_on ? __( 'Debug log is writing errors.', 'server-site-insight' ) : __( 'Debug logging is off.', 'server-site-insight' ),
 			__( 'The debug.log file may expose sensitive info if publicly accessible via URL.', 'server-site-insight' ),
-			$on ? __( "Set define('WP_DEBUG_LOG', false); or move log outside webroot.", 'server-site-insight' ) : '' );
+			$effective_on ? __( 'Disable debug logging in the Tools tab.', 'server-site-insight' ) : '' );
 	}
 
 	private static function check_file_editor( $disabled ) {
-		return self::make( $disabled ? self::STATUS_GOOD : self::STATUS_WARNING, __( 'File Editor', 'server-site-insight' ), $disabled ? __( 'Disabled', 'server-site-insight' ) : __( 'Enabled', 'server-site-insight' ),
-			$disabled ? __( 'File editor is disabled.', 'server-site-insight' ) : __( 'File editor is active.', 'server-site-insight' ),
+		$internal_off = get_option( 'ssi_disallow_file_edit', false );
+		$effective_off = $disabled || $internal_off;
+		return self::make( $effective_off ? self::STATUS_GOOD : self::STATUS_WARNING, __( 'File Editor', 'server-site-insight' ), $effective_off ? __( 'Disabled', 'server-site-insight' ) : __( 'Enabled', 'server-site-insight' ),
+			$effective_off ? __( 'File editor is disabled.', 'server-site-insight' ) : __( 'File editor is active.', 'server-site-insight' ),
 			__( 'The built-in file editor allows code injection if an admin account is compromised.', 'server-site-insight' ),
-			$disabled ? '' : __( "Add define('DISALLOW_FILE_EDIT', true); to wp-config.php.", 'server-site-insight' ) );
+			$effective_off ? '' : __( 'Disable the file editor in the Tools tab.', 'server-site-insight' ) );
 	}
 
 	private static function make( $status, $label, $value, $message, $explain, $recommendation ) {

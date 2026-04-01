@@ -489,16 +489,6 @@
 			} );
 	}
 
-	function showConfigModal( snippet ) {
-		var modal = document.getElementById( 'ssi-config-modal' );
-		if ( ! modal ) { return; }
-		var pre = modal.querySelector( '.ssi-modal__snippet' );
-		if ( pre ) { pre.textContent = snippet; }
-		modal.removeAttribute( 'hidden' );
-		var closeBtn = modal.querySelector( '.ssi-modal__close' );
-		if ( closeBtn ) { closeBtn.focus(); }
-	}
-
 	function initTools() {
 		var nonce = ( ssiData && ssiData.toolsNonce ) || '';
 
@@ -512,14 +502,9 @@
 					{ nonce: nonce, tool: 'toggle_production_mode', enable: enabled ? '1' : '0' },
 					function ( data ) {
 						prodToggle.disabled = false;
-						if ( data.requires_manual ) {
-							prodToggle.checked = ! enabled;
-							showConfigModal( data.snippet || '' );
-						} else {
-							toast( '\u2713 ' + data.message );
-							if ( data.reload ) {
-								setTimeout( function () { window.location.reload(); }, 1200 );
-							}
+						toast( '\u2713 ' + data.message );
+						if ( data.reload ) {
+							setTimeout( function () { window.location.reload(); }, 1200 );
 						}
 					},
 					function () {
@@ -558,17 +543,10 @@
 					},
 					function ( data ) {
 						toggle.disabled = false;
-						if ( data.requires_manual ) {
-							// Revert toggle — file was not changed.
-							toggle.checked = ! enabled;
-							showConfigModal( data.snippet || '' );
-						} else {
-							toast( '\u2713 ' + data.message );
-							// PHP constants can't change mid-request; reload so
-							// Overview / Health Check tabs reflect the new value.
-							if ( data.reload ) {
-								setTimeout( function () { window.location.reload(); }, 1200 );
-							}
+						toast( '\u2713 ' + data.message );
+						// PHP overrides are applied on reload.
+						if ( data.reload ) {
+							setTimeout( function () { window.location.reload(); }, 1200 );
 						}
 					},
 					function () {
@@ -625,28 +603,7 @@
 			} );
 		}
 
-		// ── Config modal ──────────────────────────────────────────────────
-		var modal = document.getElementById( 'ssi-config-modal' );
-		if ( modal ) {
-			// Copy snippet button.
-			var copyBtn = document.getElementById( 'ssi-modal-copy' );
-			if ( copyBtn ) {
-				copyBtn.addEventListener( 'click', function () {
-					var pre = modal.querySelector( '.ssi-modal__snippet' );
-					if ( pre ) { doCopy( pre.textContent.trim() ); }
-				} );
-			}
-			// Close on backdrop click or close buttons.
-			modal.querySelectorAll( '.ssi-modal__close, .ssi-modal__backdrop' ).forEach( function ( el ) {
-				el.addEventListener( 'click', function () { modal.setAttribute( 'hidden', '' ); } );
-			} );
-			// Close on Escape.
-			document.addEventListener( 'keydown', function ( e ) {
-				if ( e.key === 'Escape' && ! modal.hasAttribute( 'hidden' ) ) {
-					modal.setAttribute( 'hidden', '' );
-				}
-			} );
-		}
+		// Maintenance actions handlers already registered in handle_action switch.
 	}
 
 	// ── Fix Now Buttons ───────────────────────────────────────────────────
@@ -667,14 +624,8 @@
 				sendToolAction(
 					data,
 					function ( res ) {
-						if ( res.requires_manual ) {
-							btn.disabled = false;
-							if ( item ) { item.classList.remove( 'ssi-check-item--fixing' ); }
-							showConfigModal( res.snippet || '' );
-						} else {
-							toast( '\u2713 Success. Reloading...' );
-							setTimeout( function () { window.location.reload(); }, 1200 );
-						}
+						toast( '\u2713 Success. Reloading...' );
+						setTimeout( function () { window.location.reload(); }, 1200 );
 					},
 					function () {
 						btn.disabled = false;
@@ -795,7 +746,7 @@
 		if (action === 'ssi_lazy_queries') {
 			var warnMsg = '';
 			if (!data.savequeries) {
-				warnMsg = '<div class="ssi-admin-notice ssi-admin-notice--warning" style="margin:10px 20px;"><span class="dashicons dashicons-warning"></span> <strong>SAVEQUERIES is disabled.</strong> Define SAVEQUERIES as true in wp-config.php to capture query execution times and find slow queries.</div>';
+				warnMsg = '<div class="ssi-admin-notice ssi-admin-notice--warning" style="margin:10px 20px;"><span class="dashicons dashicons-warning"></span> <strong>Query Metrics Disabled:</strong> Enable the "Track Queries" toggle in the <strong>Tools</strong> tab to start capturing execution times and identify slow queries.</div>';
 			}
 			
 			html += warnMsg;
@@ -888,7 +839,7 @@
 		}
 		else if (action === 'ssi_lazy_plugin_impact') {
 			if (!data.savequeries) {
-				html += '<div class="ssi-admin-notice ssi-admin-notice--warning" style="margin:10px 20px;"><span class="dashicons dashicons-warning"></span> <strong>Query Metrics Unavailable:</strong> Define <code>SAVEQUERIES</code> as true in wp-config.php so the analyzer can track database queries. Hooks and Assets are still estimated.</div>';
+				html += '<div class="ssi-admin-notice ssi-admin-notice--warning" style="margin:10px 20px;"><span class="dashicons dashicons-warning"></span> <strong>Query Metrics Unavailable:</strong> Enable the "Track Queries" toggle in the <strong>Tools</strong> tab so the analyzer can track database queries. Hooks and Assets are still estimated.</div>';
 			}
 			if (!data.impact || data.impact.length === 0) {
 				html += '<p style="padding:12px;margin:0;font-size:13px;color:var(--ssi-text-muted);">No plugin footprint detected.</p>';
