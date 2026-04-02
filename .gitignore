@@ -1,0 +1,19 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# WordPress specific
+wp-config.php
+node_modules/
+vendor/
+*.log
+
+# Plugin specific
+/temp/
+*.zip
